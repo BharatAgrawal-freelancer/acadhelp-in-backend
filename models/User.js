@@ -22,12 +22,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     required: true,
+   
   },
 
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Student",
     unique: true,
+      default: null,
+       sparse: true,
   },
 
   profilePhoto: String,
