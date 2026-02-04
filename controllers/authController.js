@@ -37,56 +37,89 @@ export const getMe = async (req, res) => {
 /* ======================================================
    SIGNUP
 ====================================================== */
-
 export const signup = async (req, res) => {
   try {
+    console.log("📩 SIGNUP API HIT");
+    console.log("➡️ Request Body:", req.body);
+
     let { email } = req.body;
 
-    if (!email)
-      return res.status(400).json({ message: "Email required" });
+    // ✅ BAD REQUEST: Email Missing
+    if (!email) {
+      console.log("❌ BAD REQUEST: Email is missing");
+
+      return res.status(400).json({
+        message: "Email required"
+      });
+    }
 
     email = normalizeEmail(email);
+    console.log("✅ Normalized Email:", email);
 
+    // ✅ Check Existing User
     const existingUser = await User.findOne({ email });
 
+    // ✅ Generate OTP
     const otp = generateOtp();
+    console.log("🔑 Generated OTP:", otp);
 
+    // ✅ Remove Old OTPs
     await Otp.deleteMany({ email });
 
+    // ✅ Save OTP
     await Otp.create({
       email,
       otp,
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
-    await sendOtpMail(email, otp);
+    console.log("✅ OTP Saved in DB");
 
+    // ✅ Send OTP Mail
+    await sendOtpMail(email, otp);
+    console.log("📧 OTP Mail Sent");
+
+    // ✅ BAD REQUEST: Email Already Registered
     if (existingUser) {
+      console.log("⚠️ User Already Exists:", existingUser.email);
+
+      // Google Account Case
       if (existingUser.provider === "google" && !existingUser.password) {
+        console.log("🔄 Google user found, password not set");
+
         return res.json({
-          message:
-            "Account created using Google. Verify OTP to set password.",
+          message: "Account created using Google. Verify OTP to set password.",
           step: "VERIFY_OTP",
         });
       }
+
+      console.log("❌ BAD REQUEST: Email already registered");
 
       return res.status(400).json({
         message: "Email already registered",
       });
     }
 
+    // ✅ Create New User
     await User.create({
       email,
       provider: "form",
       isverified: false,
     });
 
-    res.json({
+    console.log("✅ New User Created Successfully");
+
+    return res.json({
       message: "OTP sent to email",
       step: "VERIFY_OTP",
     });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.log("🔥 SIGNUP ERROR:", err);
+
+    return res.status(500).json({
+      error: err.message
+    });
   }
 };
 

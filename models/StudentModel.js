@@ -2,6 +2,22 @@ import mongoose from "mongoose";
 
 const { Schema, Types } = mongoose;
 
+const testDetailSchema = new mongoose.Schema({
+  examBatchId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "StudentExamBatch",
+    required: true
+  },
+  overallGood: {
+    type: Boolean, // true = test acha gaya, false = acha nahi gaya
+    default: false
+  },
+  improvements: {
+    type: String, // per test improvements
+    trim: true
+  }
+}, { _id: false });
+
 const StudentSchema = new Schema(
   {
     userId: {
@@ -10,6 +26,8 @@ const StudentSchema = new Schema(
       required: true,
       unique: true
     },
+    
+  name: String,
 
     targetExam: {
       type: String,
@@ -153,7 +171,11 @@ const StudentSchema = new Schema(
         type: Number,
         default: 0
       },
-
+      tests: {
+        type: [testDetailSchema], // array of test details
+        default: []
+      }
+      ,
       totalQuestionsAttempted: {
         type: Number,
         default: 0
@@ -197,6 +219,23 @@ const StudentSchema = new Schema(
       }
     ],
 
+    netPercentile: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0
+    },
+    predictedRank: {
+      type: Number,
+      min: 1,
+      default: null
+    },
+    recentImprovedMarks: {
+      type: Number,
+      min: 0,
+      default: 0
+    },
+
     preferences: {
       language: {
         type: String,
@@ -213,12 +252,12 @@ const StudentSchema = new Schema(
       type: Boolean,
       default: true
     },
-      isNew: {
+    isNew: {
       type: Boolean,
       default: true
     }
   },
-  
+
   {
     timestamps: true
   }

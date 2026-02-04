@@ -36,7 +36,7 @@ export const getExamById = async (req, res) => {
         message: "Exam not found"
       });
     }
-
+console.log(exam);
     res.status(200).json(exam);
 
   } catch (err) {

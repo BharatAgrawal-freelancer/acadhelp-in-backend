@@ -63,81 +63,96 @@ export const getExamBatchById = async (req, res) => {
     });
   }
 };
-
-
 /* =====================================================
-   GET FULL EXAM QUESTIONS (INTERNAL USE)
+   GET FULL EXAM QUESTIONS (FOR EXAM RUNNER)
 ===================================================== */
-
 export const getExamBatchQuestions = async (req, res) => {
   try {
     const { batchId } = req.params;
 
+    // ✅ Load Batch + Subject Names
     const batch = await ExamBatch.findById(batchId)
       .populate("sections.subjectId", "name")
       .lean();
 
     if (!batch) {
       return res.status(404).json({
+        success: false,
         message: "Exam batch not found"
       });
     }
 
     const subjectMap = {};
 
-    // -------------------------------------------------
-    // LOOP EACH SECTION
-    // -------------------------------------------------
+    /* -----------------------------------------------
+       LOOP THROUGH EACH SECTION
+    ------------------------------------------------ */
     for (const section of batch.sections) {
-
+      // ✅ Fetch Active Questions Only
       const questions = await Question.find({
         _id: { $in: section.questionIds },
         isActive: true
       })
-        .select(
-          "heading questionText questionType options subjectId"
-        )
+        .select("heading questionText questionType options")
         .lean();
 
-      if (!subjectMap[section.subjectId._id]) {
-        subjectMap[section.subjectId._id] = {
+      // ✅ Initialize Subject Entry
+      const subjectId = section.subjectId._id.toString();
+
+      if (!subjectMap[subjectId]) {
+        subjectMap[subjectId] = {
           subjectId: section.subjectId._id,
           subjectName: section.subjectId.name,
           questions: []
         };
       }
 
-      for (const q of questions) {
-        subjectMap[section.subjectId._id].questions.push({
+      // ✅ Format Questions for Frontend
+      questions.forEach(q => {
+        subjectMap[subjectId].questions.push({
           questionId: q._id,
-          heading: q.heading,
+          heading: q.heading || "",
           questionText: q.questionText,
           questionType: q.questionType,
 
-          options: q.options.map(opt => ({
-            optionId: opt.optionId,
+          options: q.options.map((opt, idx) => ({
+            optionId: opt.optionId || idx,
             value: opt.value
           }))
         });
-      }
+      });
     }
 
-    // -------------------------------------------------
-    // FINAL RESPONSE
-    // -------------------------------------------------
-    res.status(200).json({
+    /* -----------------------------------------------
+       FINAL RESPONSE OBJECT
+    ------------------------------------------------ */
+    const finalResponse = {
+      success: true,
+
       batchId: batch._id,
       batchName: batch.name,
       durationMinutes: batch.durationMinutes,
       markingScheme: batch.markingScheme,
 
       subjects: Object.values(subjectMap)
-    });
+    };
+
+    /* -----------------------------------------------
+       ✅ CONSOLE LOG FINAL FORMAT
+    ------------------------------------------------ */
+    console.log("✅ Final Exam Batch Response Sent:");
+    console.log(JSON.stringify(finalResponse, null, 2));
+
+    /* -----------------------------------------------
+       SEND RESPONSE TO FRONTEND
+    ------------------------------------------------ */
+    return res.status(200).json(finalResponse);
 
   } catch (err) {
-    console.error("EXAM QUESTION API ERROR:", err);
+    console.error("❌ Exam Batch API Error:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
+      success: false,
       message: "Failed to load exam questions",
       error: err.message
     });

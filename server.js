@@ -14,6 +14,7 @@ import studentRoutes from "./routes/studentRoutes.js";
 import examRoutes from "./routes/examRoutes.js";
 import examBatchRoutes from "./routes/examBatchRoutes.js";
 
+import examSubmitRoute from "./routes/examSubmitRoute.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -61,6 +62,8 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/exams", examRoutes);
+
+app.use("/api/exam", examSubmitRoute);
 
 app.use("/api/exam-batches", examBatchRoutes);
 

@@ -6,12 +6,13 @@ import Chapter from "../models/ChapterModel.js";
 /* =====================================================
    CREATE / UPDATE PROFILE
 ===================================================== */
-
 export const createOrUpdateProfile = async (req, res) => {
   try {
     const userId = req.userId;
 
+    // ✅ Name bhi frontend se lo
     const {
+      name,
       targetExam,
       targetYear,
       classLevel,
@@ -21,19 +22,36 @@ export const createOrUpdateProfile = async (req, res) => {
 
     let student = await Student.findOne({ userId });
 
+    // -------------------------------------------------
+    // ✅ CREATE NEW PROFILE
+    // -------------------------------------------------
     if (!student) {
       student = await Student.create({
         userId,
+
+        // ✅ Save Name
+        name,
+
         targetExam,
         targetYear,
         classLevel,
+
         preferences: {
           language,
           darkMode
         },
+
         isNew: false
       });
-    } else {
+    }
+
+    // -------------------------------------------------
+    // ✅ UPDATE EXISTING PROFILE
+    // -------------------------------------------------
+    else {
+      // ✅ Update Name also
+      student.name = name;
+
       student.targetExam = targetExam;
       student.targetYear = targetYear;
       student.classLevel = classLevel;
@@ -46,13 +64,20 @@ export const createOrUpdateProfile = async (req, res) => {
       await student.save();
     }
 
+    // -------------------------------------------------
+    // ✅ RESPONSE
+    // -------------------------------------------------
     res.status(200).json({
+      success: true,
       message: "Profile saved successfully",
       student
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 };
 
