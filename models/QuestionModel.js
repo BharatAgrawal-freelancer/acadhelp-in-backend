@@ -34,6 +34,7 @@ const QuestionSchema = new Schema(
 
     questionType: {
       type: String,
+    
       required: true,
       enum: [
         "MCQ_SINGLE",
@@ -45,7 +46,9 @@ const QuestionSchema = new Schema(
         "PARAGRAPH"
       ]
     },
-
+  img: {
+    type: String,
+  },
     options: [
       {
         optionId: {

@@ -126,20 +126,27 @@ export const signup = async (req, res) => {
 /* ======================================================
    VERIFY OTP
 ====================================================== */
-
 export const verifyOtp = async (req, res) => {
   try {
-    let { email, otp, password } = req.body;
+    let { email, otp, password, mobile } = req.body;
 
     // -------------------------
     // validations
     // -------------------------
-    if (!email || !otp || !password) {
+    if (!email || !otp || !password || !mobile) {
       return res.status(400).json({
-        message: "Email, OTP and password are required",
+        message: "Email, OTP, password and mobile number are required",
       });
     }
 
+    // ✅ Mobile Validation (10 digit only)
+    if (!/^[0-9]{10}$/.test(mobile)) {
+      return res.status(400).json({
+        message: "Invalid mobile number",
+      });
+    }
+
+    // ✅ Password Validation
     if (password.length < 6) {
       return res.status(400).json({
         message: "Password must be at least 6 characters",
@@ -164,15 +171,19 @@ export const verifyOtp = async (req, res) => {
     // -------------------------
     const user = await User.findOne({ email });
 
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
 
     // -------------------------
-    // set password
+    // set password + mobile
     // -------------------------
     const hash = await bcrypt.hash(password, 10);
 
     user.password = hash;
+    user.mobile = mobile;
     user.isverified = true;
 
     await user.save();
@@ -182,12 +193,30 @@ export const verifyOtp = async (req, res) => {
     // -------------------------
     await Otp.deleteMany({ email });
 
-    res.json({
-      message: "OTP verified and password set successfully",
+    // -------------------------
+    // ✅ CREATE JWT TOKEN (Like Login)
+    // -------------------------
+    const token = generateToken(user._id);
+
+    // -------------------------
+    // send response with token
+  
+    // -------------------------
+    res.status(200).json({
+      message: "OTP verified successfully",
+      token, // 🔥 Token Frontend ko milega
+      user: {
+        id: user._id,
+        email: user.email,
+        mobile: user.mobile,
+      },
     });
+
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 };
 

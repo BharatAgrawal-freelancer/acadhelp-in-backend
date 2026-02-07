@@ -88,12 +88,12 @@ export const getExamBatchQuestions = async (req, res) => {
        LOOP THROUGH EACH SECTION
     ------------------------------------------------ */
     for (const section of batch.sections) {
-      // ✅ Fetch Active Questions Only
+      // ✅ Fetch Active Questions Only + Include img
       const questions = await Question.find({
         _id: { $in: section.questionIds },
         isActive: true
       })
-        .select("heading questionText questionType options")
+        .select("heading questionText questionType img options")
         .lean();
 
       // ✅ Initialize Subject Entry
@@ -107,14 +107,23 @@ export const getExamBatchQuestions = async (req, res) => {
         };
       }
 
-      // ✅ Format Questions for Frontend
+      /* -----------------------------------------------
+         FORMAT QUESTIONS FOR FRONTEND
+      ------------------------------------------------ */
       questions.forEach(q => {
         subjectMap[subjectId].questions.push({
           questionId: q._id,
+
           heading: q.heading || "",
           questionText: q.questionText,
+
+          // ✅ Question Type
           questionType: q.questionType,
 
+          // ✅ Include Question Image URL
+          img: q.img || "",
+
+          // ✅ Options Formatting
           options: q.options.map((opt, idx) => ({
             optionId: opt.optionId || idx,
             value: opt.value
@@ -138,7 +147,7 @@ export const getExamBatchQuestions = async (req, res) => {
     };
 
     /* -----------------------------------------------
-       ✅ CONSOLE LOG FINAL FORMAT
+       ✅ LOG FINAL RESPONSE
     ------------------------------------------------ */
     console.log("✅ Final Exam Batch Response Sent:");
     console.log(JSON.stringify(finalResponse, null, 2));

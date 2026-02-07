@@ -10,6 +10,13 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
 
+    mobile: {
+    type: String,
+    unique: true,
+    sparse: true, 
+    match: /^[0-9]{10}$/, 
+  },
+
   isverified: {
     type: Boolean,
     default: false,

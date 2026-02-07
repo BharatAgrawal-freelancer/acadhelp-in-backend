@@ -74,7 +74,23 @@ export const createOrUpdateProfile = async (req, res) => {
     });
 
   } catch (err) {
+      // ✅ FULL ERROR LOGS (Backend Terminal में दिखेगा)
+  console.log("🔥 INTERNAL SERVER ERROR IN PROFILE API");
+  console.log("➡️ Error Message:", err.message);
+
+  // अगर Mongo/Mongoose validation error है
+  console.log("➡️ Full Error Object:", err);
+
+  // पूरा stack trace (सबसे useful)
+  console.log("➡️ Error Stack:", err.stack);
+
+  // अगर error details मौजूद हैं
+  if (err.errors) {
+    console.log("➡️ Mongoose Validation Errors:", err.errors);
+  }
     res.status(500).json({
+
+
       success: false,
       error: err.message
     });

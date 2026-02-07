@@ -15,7 +15,7 @@ import examRoutes from "./routes/examRoutes.js";
 import examBatchRoutes from "./routes/examBatchRoutes.js";
 
 import examSubmitRoute from "./routes/examSubmitRoute.js";
-
+import goalRoutes from "./routes/goalRoute.js";
 const app = express();
 const PORT = process.env.PORT;
 // Connect to MongoDB
@@ -55,6 +55,7 @@ app.use("/auth", authRoutes);
 
 app.use("/api/student", studentRoutes);
 
+app.use("/api/goals", goalRoutes);
 app.use("/api/gemini", geminiRoute);
 // Health check
 app.get("/health", (req, res) => {
