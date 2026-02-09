@@ -12,7 +12,6 @@ export const getBatchesByExam = async (req, res) => {
 
     const batches = await ExamBatch.find({
       examId,
-      isActive: true,
       isPublished: true
     })
       .select("year shift name examId")
@@ -90,8 +89,7 @@ export const getExamBatchQuestions = async (req, res) => {
     for (const section of batch.sections) {
       // ✅ Fetch Active Questions Only + Include img
       const questions = await Question.find({
-        _id: { $in: section.questionIds },
-        isActive: true
+        _id: { $in: section.questionIds }
       })
         .select("heading questionText questionType img options")
         .lean();
