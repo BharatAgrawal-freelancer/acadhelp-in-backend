@@ -18,6 +18,7 @@ import examSubmitRoute from "./routes/examSubmitRoute.js";
 import goalRoutes from "./routes/goalRoute.js";
 import masterPackageRoutes from "./routes/masterPackageRoutes.js";
 
+import paymentRoutes from "./routes/paymentRoutes.js";
 const app = express();
 const PORT = process.env.PORT;
 // Connect to MongoDB
@@ -70,6 +71,7 @@ app.use("/api/exam", examSubmitRoute);
 
 app.use("/api/exam-batches", examBatchRoutes);
 app.use("/api/masterpackage", masterPackageRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Error handling
 app.use(errorHandler);

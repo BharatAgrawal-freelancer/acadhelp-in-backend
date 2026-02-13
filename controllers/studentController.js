@@ -155,3 +155,25 @@ export const isNewStudent = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getMyPaidContents = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // 1. Find User
+    const user = await User.findById(userId).select("purchasedContents");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 2. Return Purchased Contents (raw IDs only)
+    res.json({
+      success: true,
+      purchasedContents: user.purchasedContents,
+    });
+  } catch (error) {
+    console.error("PaidContent Fetch Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
