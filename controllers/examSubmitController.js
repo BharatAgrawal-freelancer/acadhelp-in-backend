@@ -5,7 +5,7 @@ import Question from "../models/QuestionModel.js";
  */
 export const submitFinalExam = async (req, res) => {
   try {
-    const { answers } = req.body;
+    const { answers, batchId } = req.body;
 
     if (!answers || answers.length === 0) {
       return res.status(400).json({
@@ -14,7 +14,7 @@ export const submitFinalExam = async (req, res) => {
     }
 
     // -----------------------------
-    // Load all questionIds
+    // Load all Questions
     // -----------------------------
     const questionIds = answers.map((a) => a.questionId);
 
@@ -23,7 +23,7 @@ export const submitFinalExam = async (req, res) => {
     });
 
     // -----------------------------
-    // Stats variables
+    // Stats Variables
     // -----------------------------
     let totalQuestions = questions.length;
 
@@ -34,15 +34,15 @@ export const submitFinalExam = async (req, res) => {
     let totalTime = 0;
     let totalScore = 0;
 
-    // Score config (example)
+    // Score Config
     const marksCorrect = 4;
     const marksWrong = -1;
 
-    // Detailed report
+    // Detailed Report
     const report = [];
 
     // -----------------------------
-    // Evaluate each answer
+    // Evaluate Each Answer
     // -----------------------------
     for (let ans of answers) {
       const question = questions.find(
@@ -53,53 +53,98 @@ export const submitFinalExam = async (req, res) => {
 
       totalTime += ans.timeSpentSeconds || 0;
 
-      // correct option
-      const correctOption = question.options.find(
-        (opt) => opt.isCorrect === true
-      );
-
-      // User didn't attempt
-      if (!ans.selectedOption) {
+      // -----------------------------
+      // If Not Attempted
+      // -----------------------------
+      if (
+        ans.selectedOption === null ||
+        ans.selectedOption === undefined ||
+        ans.selectedOption === ""
+      ) {
         unattempted++;
 
         report.push({
           questionId: question._id,
           status: "UNATTEMPTED",
-          correctAnswer: correctOption?.value,
+          correctAnswer:
+            question.questionType === "NUMERICAL"
+              ? question.solution?.finalAnswer
+              : question.options.find((o) => o.isCorrect)?.value,
         });
 
         continue;
       }
 
-      // Match answer
-      if (ans.selectedOption === correctOption?.value) {
-        correct++;
-        totalScore += marksCorrect;
+      // -----------------------------
+      // CASE 1: MCQ_SINGLE
+      // -----------------------------
+      if (question.questionType === "MCQ_SINGLE") {
+        const correctOption = question.options.find(
+          (opt) => opt.isCorrect === true
+        );
 
-        report.push({
-          questionId: question._id,
-          status: "CORRECT",
-          correctAnswer: correctOption?.value,
-        });
-      } else {
-        wrong++;
-        totalScore += marksWrong;
+        if (String(ans.selectedOption) === String(correctOption?.value)) {
+          correct++;
+          totalScore += marksCorrect;
 
-        report.push({
-          questionId: question._id,
-          status: "WRONG",
-          correctAnswer: correctOption?.value,
-        });
+          report.push({
+            questionId: question._id,
+            status: "CORRECT",
+            correctAnswer: correctOption?.value,
+          });
+        } else {
+          wrong++;
+          totalScore += marksWrong;
+
+          report.push({
+            questionId: question._id,
+            status: "WRONG",
+            correctAnswer: correctOption?.value,
+          });
+        }
+      }
+
+      // -----------------------------
+      // CASE 2: NUMERICAL
+      // -----------------------------
+      if (question.questionType === "NUMERICAL") {
+        const correctNumericalAnswer =
+          question.solution?.finalAnswer;
+
+        if (
+          String(ans.selectedOption).trim() ===
+          String(correctNumericalAnswer).trim()
+        ) {
+          correct++;
+          totalScore += marksCorrect;
+
+          report.push({
+            questionId: question._id,
+            status: "CORRECT",
+            correctAnswer: correctNumericalAnswer,
+          });
+        } else {
+          wrong++;
+          totalScore += marksWrong;
+
+          report.push({
+            questionId: question._id,
+            status: "WRONG",
+            correctAnswer: correctNumericalAnswer,
+          });
+        }
       }
     }
 
     // -----------------------------
-    // Accuracy %
+    // Accuracy Calculation
     // -----------------------------
     const attempted = totalQuestions - unattempted;
 
     const accuracy =
-      attempted === 0 ? 0 : ((correct / attempted) * 100).toFixed(2);
+      attempted === 0
+        ? 0
+        : ((correct / attempted) * 100).toFixed(2);
 
     // -----------------------------
     // Percentage Score
@@ -109,10 +154,8 @@ export const submitFinalExam = async (req, res) => {
     const percentage = ((totalScore / maxScore) * 100).toFixed(2);
 
     // -----------------------------
-    // Percentile (Approx Formula)
+    // Percentile Estimate
     // -----------------------------
-    // Real percentile needs all students data
-    // Here we give estimated percentile
     let percentile = 0;
 
     if (percentage >= 90) percentile = 99;
@@ -145,7 +188,7 @@ export const submitFinalExam = async (req, res) => {
         totalTimeMinutes: (totalTime / 60).toFixed(1),
       },
 
-      report, // per question result
+      report,
     });
   } catch (error) {
     console.error("Exam Submit Error:", error);
