@@ -131,22 +131,14 @@ export const verifyOtp = async (req, res) => {
     let { email, otp, password, mobile } = req.body;
 
     // -------------------------
-    // validations
+    // Basic validations
     // -------------------------
-    if (!email || !otp || !password || !mobile) {
+    if (!email || !otp || !password) {
       return res.status(400).json({
-        message: "Email, OTP, password and mobile number are required",
+        message: "Email, OTP and password are required",
       });
     }
 
-    // ✅ Mobile Validation (10 digit only)
-    if (!/^[0-9]{10}$/.test(mobile)) {
-      return res.status(400).json({
-        message: "Invalid mobile number",
-      });
-    }
-
-    // ✅ Password Validation
     if (password.length < 6) {
       return res.status(400).json({
         message: "Password must be at least 6 characters",
@@ -156,7 +148,7 @@ export const verifyOtp = async (req, res) => {
     email = email.trim().toLowerCase();
 
     // -------------------------
-    // verify OTP
+    // Verify OTP
     // -------------------------
     const record = await Otp.findOne({ email, otp });
 
@@ -167,7 +159,7 @@ export const verifyOtp = async (req, res) => {
     }
 
     // -------------------------
-    // find user
+    // Find user
     // -------------------------
     const user = await User.findOne({ email });
 
@@ -178,46 +170,43 @@ export const verifyOtp = async (req, res) => {
     }
 
     // -------------------------
-    // set password + mobile
+    // 🔥 ALWAYS UPDATE PASSWORD
     // -------------------------
     const hash = await bcrypt.hash(password, 10);
-
     user.password = hash;
-    user.mobile = mobile;
-    user.isverified = true;
+
+    // -------------------------
+    // If mobile provided → update
+    // (Signup case)
+    // -------------------------
+    if (mobile) {
+      if (!/^[0-9]{10}$/.test(mobile)) {
+        return res.status(400).json({
+          message: "Invalid mobile number",
+        });
+      }
+
+      user.mobile = mobile;
+      user.isverified = true;
+    }
 
     await user.save();
 
     // -------------------------
-    // cleanup OTP
+    // Cleanup OTP
     // -------------------------
     await Otp.deleteMany({ email });
 
-    // -------------------------
-    // ✅ CREATE JWT TOKEN (Like Login)
-    // -------------------------
-    const token = generateToken(user._id);
-
-    // -------------------------
-    // send response with token
-  
-    // -------------------------
-    res.status(200).json({
-      message: "OTP verified successfully",
-      token, // 🔥 Token Frontend ko milega
-      user: {
-        id: user._id,
-        email: user.email,
-        mobile: user.mobile,
-      },
+    return res.status(200).json({
+      message: "Password set/updated successfully",
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      error: err.message,
-    });
-  }
+  console.error("VERIFY OTP ERROR:", err);
+  return res.status(500).json({
+    error: err.message,
+  });
+}
 };
 
 /* ======================================================
