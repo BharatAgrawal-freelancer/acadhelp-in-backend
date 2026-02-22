@@ -19,6 +19,15 @@ import goalRoutes from "./routes/goalRoute.js";
 import masterPackageRoutes from "./routes/masterPackageRoutes.js";
 
 import paymentRoutes from "./routes/paymentRoutes.js";
+import bookmarkRoutes from "./routes//bookMarkRoute.js";
+// ADMIN PANEL IMPORT 
+import adminRoutes from "./admin/routes/adminRoutes.js";
+import allUsersRoute from "./admin/routes/allUsersRoute.js";
+import getAllBatchRoute from "./admin/routes/getAllBatchRoutes.js";
+import discountRoutes from "./admin/routes/discountRoute.js";
+import paidContentRoutes from "./admin/routes/getAllPaidContentRoute.js";
+
+
 const app = express();
 const PORT = process.env.PORT;
 // Connect to MongoDB
@@ -72,6 +81,14 @@ app.use("/api/exam", examSubmitRoute);
 app.use("/api/exam-batches", examBatchRoutes);
 app.use("/api/masterpackage", masterPackageRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/bookmarks", bookmarkRoutes);
+// ---- ADMIN PANEL------
+app.use("/api/admin", adminRoutes);
+app.use("/api/admin/users", allUsersRoute);
+app.use("/api/admin/exam-batches", getAllBatchRoute);
+app.use("/api/admin/discount", discountRoutes);
+app.use("/api/admin/paid-contents", paidContentRoutes);
+
 
 // Error handling
 app.use(errorHandler);

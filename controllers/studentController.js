@@ -2,7 +2,7 @@ import Student from "../models/StudentModel.js";
 import User from "../models/User.js";
 import Subject from "../models/SubjectModel.js";
 import Chapter from "../models/ChapterModel.js";
-
+import StudentExamBatch from "../models/StudentExamBatchModel.js";
 /* =====================================================
    CREATE / UPDATE PROFILE
 ===================================================== */
@@ -100,16 +100,21 @@ export const createOrUpdateProfile = async (req, res) => {
 /* =====================================================
    GET FULL STUDENT PROFILE
 ===================================================== */
-
 export const getStudentProfile = async (req, res) => {
   try {
+
     const userId = req.userId;
 
-    // find student
     const student = await Student.findOne({ userId })
-      .populate("subjects.subjectId")
-      .populate("subjects.strongChapters")
-      .populate("subjects.weakChapters");
+
+      // ONLY populate exam batch
+      .populate({
+        path: "testStatistics.tests.examBatchId",
+        model: "StudentExamBatch"
+      })
+
+      // remove unnecessary mongo fields if you want clean response
+      .lean();
 
     if (!student) {
       return res.status(404).json({
@@ -117,21 +122,25 @@ export const getStudentProfile = async (req, res) => {
       });
     }
 
-    // find user
-    const user = await User.findById(userId).select(
-      "email name profilePhoto provider createdAt"
-    );
+    const user = await User.findById(userId)
+      .select("email name profilePhoto provider createdAt")
+      .lean();
 
     res.status(200).json({
+      success: true,
       student,
       user
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+
   }
 };
-
 /* =====================================================
    IS NEW USER CHECK
 ===================================================== */
