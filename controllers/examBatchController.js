@@ -165,3 +165,40 @@ export const getExamBatchQuestions = async (req, res) => {
     });
   }
 };
+
+
+/* =====================================================
+   GET LATEST ACTIVE JEE MAINS BATCH
+===================================================== */
+export const getLatestJeeMainsBatch = async (req, res) => {
+  try {
+    const latestBatch = await ExamBatch.findOne({
+      name: { $regex: /^JEE-MAINS/i },
+      isActive: true,
+      isPublished: true
+    })
+      .sort({ _id: -1 })   // 🔥 MOST RELIABLE FOR LATEST INSERT
+      .select("_id name createdAt");
+
+    if (!latestBatch) {
+      return res.status(404).json({
+        success: false,
+        message: "No active JEE Mains batch found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      batchId: latestBatch._id,
+      batchName: latestBatch.name,
+      createdAt: latestBatch.createdAt
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch latest JEE Mains batch",
+      error: err.message
+    });
+  }
+};

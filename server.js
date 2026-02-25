@@ -20,12 +20,14 @@ import masterPackageRoutes from "./routes/masterPackageRoutes.js";
 
 import paymentRoutes from "./routes/paymentRoutes.js";
 import bookmarkRoutes from "./routes//bookMarkRoute.js";
+import chapterRankingRoutes from "./routes/chapterRankingRoutes.js";
 // ADMIN PANEL IMPORT 
 import adminRoutes from "./admin/routes/adminRoutes.js";
 import allUsersRoute from "./admin/routes/allUsersRoute.js";
 import getAllBatchRoute from "./admin/routes/getAllBatchRoutes.js";
 import discountRoutes from "./admin/routes/discountRoute.js";
 import paidContentRoutes from "./admin/routes/getAllPaidContentRoute.js";
+import selfBatchRoutes from "./routes/selfCreatedExamBatchRoutes.js";
 
 
 const app = express();
@@ -82,6 +84,8 @@ app.use("/api/exam-batches", examBatchRoutes);
 app.use("/api/masterpackage", masterPackageRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/bookmarks", bookmarkRoutes);
+app.use("/api/chapter-rankings", chapterRankingRoutes);
+app.use("/api/self-batch", selfBatchRoutes);
 // ---- ADMIN PANEL------
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/users", allUsersRoute);
