@@ -21,6 +21,7 @@ import masterPackageRoutes from "./routes/masterPackageRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import bookmarkRoutes from "./routes//bookMarkRoute.js";
 import chapterRankingRoutes from "./routes/chapterRankingRoutes.js";
+import videoRoutes from "./routes/videoRoutes.js";
 // ADMIN PANEL IMPORT 
 import adminRoutes from "./admin/routes/adminRoutes.js";
 import allUsersRoute from "./admin/routes/allUsersRoute.js";
@@ -86,6 +87,8 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/chapter-rankings", chapterRankingRoutes);
 app.use("/api/self-batch", selfBatchRoutes);
+app.use("/api/videos", videoRoutes);
+
 // ---- ADMIN PANEL------
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/users", allUsersRoute);

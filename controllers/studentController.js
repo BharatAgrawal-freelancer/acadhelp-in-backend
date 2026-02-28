@@ -41,7 +41,7 @@ export const createOrUpdateProfile = async (req, res) => {
           darkMode
         },
 
-        isNew: false
+        isNew: true
       });
     }
 
@@ -59,7 +59,7 @@ export const createOrUpdateProfile = async (req, res) => {
       student.preferences.language = language;
       student.preferences.darkMode = darkMode;
 
-      student.isNew = false;
+      student.isNew = true;
 
       await student.save();
     }
@@ -184,5 +184,47 @@ export const getMyPaidContents = async (req, res) => {
   } catch (error) {
     console.error("PaidContent Fetch Error:", error);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+/* =====================================================
+   MARK STUDENT AS NOT NEW
+===================================================== */
+export const markStudentAsOld = async (req, res) => {
+  try {
+    const userId = req.userId; // 🔥 From middleware (JWT decoded)
+
+    const student = await Student.findOne({ userId });
+
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student profile not found",
+      });
+    }
+
+    // If already false, avoid unnecessary DB write
+    if (student.isNew === false) {
+      return res.status(200).json({
+        success: true,
+        message: "Student already marked as not new",
+      });
+    }
+
+    student.isNew = false;
+    await student.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Student marked as not new successfully",
+    });
+
+  } catch (err) {
+    console.error("Mark Student As Old Error:", err);
+
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 };

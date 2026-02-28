@@ -2,7 +2,7 @@ import express from "express";
 import {
   createOrUpdateProfile,
   getStudentProfile,
-  isNewStudent
+  isNewStudent , markStudentAsOld
 } from "../controllers/studentController.js";
 
 import { protect } from "../middleware/authMiddleware.js";
@@ -15,4 +15,6 @@ router.get("/profile", protect, getStudentProfile);
 
 router.get("/is-new", protect, isNewStudent);
 router.get("/paid-content", protect, getMyPaidContents);
+
+router.patch("/mark-not-new", protect , markStudentAsOld);
 export default router;
